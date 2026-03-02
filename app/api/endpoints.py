@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import os
 import base64
 from collections.abc import AsyncGenerator
 from http import HTTPStatus
 import json
+import os
 import random
 import time
 from typing import Annotated, Any, Literal
@@ -15,58 +15,49 @@ from fastapi import APIRouter, Form, HTTPException, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from loguru import logger
 import numpy as np
+from openai.types.responses import FunctionTool
+from openai.types.responses.response_function_tool_call import ResponseFunctionToolCall
+from openai.types.responses.response_output_message import ResponseOutputMessage, ResponseOutputText
+from openai.types.responses.response_reasoning_item import Content, ResponseReasoningItem, Summary
 
 from ..handler.mlx_lm import MLXLMHandler
 from ..handler.mlx_vlm import MLXVLMHandler
 from ..schemas.openai import (
+    ChatCompletionChunk,
     ChatCompletionContentPartImage,
     ChatCompletionContentPartText,
-    ChatCompletionChunk,
     ChatCompletionMessageToolCall,
     ChatCompletionRequest,
-    Config,
     ChatCompletionResponse,
     Choice,
     ChoiceDeltaFunctionCall,
     ChoiceDeltaToolCall,
+    Config,
     Delta,
     EmbeddingRequest,
     EmbeddingResponse,
     EmbeddingResponseData,
     FunctionCall,
-    ImageURL,
     HealthCheckResponse,
     HealthCheckStatus,
     ImageEditRequest,
     ImageEditResponse,
     ImageGenerationRequest,
     ImageGenerationResponse,
+    ImageURL,
+    InputTokensDetails,
     Message,
     Model,
     ModelsResponse,
+    OutputTokensDetails,
     ResponsesRequest,
     ResponsesResponse,
     ResponseUsage,
-    InputTokensDetails,
-    OutputTokensDetails,
     StreamingChoice,
     TranscriptionRequest,
     TranscriptionResponse,
     UsageInfo,
     random_uuid,
-)
-from openai.types.responses import FunctionTool
-from openai.types.responses.response_output_message import (
-    ResponseOutputText,
-    ResponseOutputMessage
-)
-from openai.types.responses.response_function_tool_call import (
-    ResponseFunctionToolCall
-)
-from openai.types.responses.response_reasoning_item import (
-    Summary,
-    Content,
-    ResponseReasoningItem
 )
 from ..utils.errors import create_error_response
 
@@ -198,6 +189,11 @@ async def models(raw_request: Request) -> ModelsResponse | JSONResponse:
     if registry is not None:
         try:
             models_data = registry.list_models()
+            for model in models_data:
+                model_id = model.get("id")
+                if model_id:
+                    handler = registry.get_handler(model_id)
+                    model["status"] = getattr(handler, "status", "unknown")
             return ModelsResponse(object="list", data=[Model(**model) for model in models_data])
         except Exception as e:
             logger.error(f"Error retrieving models from registry. {type(e).__name__}: {e}")
@@ -224,6 +220,8 @@ async def models(raw_request: Request) -> ModelsResponse | JSONResponse:
 
     try:
         models_data = await handler.get_models()
+        for model in models_data:
+            model["status"] = getattr(handler, "status", "unknown")
         return ModelsResponse(object="list", data=[Model(**model) for model in models_data])
     except HTTPException:
         raise
@@ -807,7 +805,7 @@ async def process_multimodal_request(
     usage = result.get("usage")
     final_response = format_final_response(response_data, request.model, request_id, usage)
     return JSONResponse(content=final_response.model_dump(exclude_none=True))
-    
+
 
 
 async def process_text_request(
@@ -1011,7 +1009,7 @@ def _convert_responses_content(
                     image_url=ImageURL(url=str(normalized["image_url"])),
                 )
             )
-    return converted if converted else ""
+    return converted or ""
 
 
 def _convert_responses_tools(tools: list[Any] | None) -> list[dict[str, Any]] | None:
@@ -1299,7 +1297,7 @@ def format_final_responses_response(
         status="completed",
         incomplete_details=None,
         instructions=request.instructions,
-        model=request.model,       
+        model=request.model,
         object="response",
         top_p=request.top_p,
         temperature=request.temperature,
