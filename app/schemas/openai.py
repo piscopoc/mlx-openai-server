@@ -2,18 +2,19 @@
 
 from __future__ import annotations
 
-import uuid
-import time
 from enum import Enum
+import time
 from typing import Any, ClassVar, Literal, TypeAlias
+import uuid
 
-from loguru import logger
 from fastapi import UploadFile
+from loguru import logger
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
 
 class OpenAIBaseModel(BaseModel):
     """Base model for OpenAI API schemas."""
-    
+
     # OpenAI API does allow extra fields
     model_config = ConfigDict(extra="allow")
 
@@ -156,7 +157,7 @@ class PromptTokenUsageInfo(OpenAIBaseModel):
 
 class StreamOptions(OpenAIBaseModel):
     """Stream options for a request."""
-    
+
     include_usage: bool | None = True
     continuous_usage_stats: bool | None = False
 
@@ -184,9 +185,8 @@ def random_uuid() -> str:
 def make_tool_call_id(id_type: str = "random", func_name=None, idx=None):
     if id_type == "kimi_k2":
         return f"functions.{func_name}:{idx}"
-    else:
-        # by default return random
-        return f"chatcmpl-tool-{random_uuid()}"
+    # by default return random
+    return f"chatcmpl-tool-{random_uuid()}"
 
 
 class ChatCompletionMessageToolCall(OpenAIBaseModel):
@@ -249,20 +249,15 @@ class ChatCompletionNamedToolChoiceParam(OpenAIBaseModel):
     type: Literal["function"] = "function"
 
 class ChatCompletionRequest(OpenAIBaseModel):
-
     """Request schema for OpenAI-compatible chat completion API."""
-    
+
     model: str = Field(Config.TEXT_MODEL, description="The model to use for completion.")
     messages: list[Message] = Field(..., description="The list of messages in the conversation.")
     tools: list[ChatCompletionToolsParam] | None = Field(
         None, description="List of tools available for the request."
     )
     tool_choice: (
-        Literal["none"]
-        | Literal["auto"]
-        | Literal["required"]
-        | ChatCompletionNamedToolChoiceParam
-        | None
+        Literal["none", "auto", "required"] | ChatCompletionNamedToolChoiceParam | None
     ) = "none"
     max_tokens: int | None = Field(
         default=None,
@@ -435,6 +430,7 @@ class Model(OpenAIBaseModel):
     object: str = Field("model", description="The object type, always 'model'.")
     created: int = Field(..., description="The creation timestamp.")
     owned_by: str = Field("openai", description="The owner of the model.")
+    status: str | None = Field(None, description="The status of the model.")
     metadata: dict[str, Any] | None = Field(None, description="Additional model metadata.")
 
 
@@ -650,14 +646,9 @@ class TranscriptionResponseStream(OpenAIBaseModel):
 
 # --- Responses API Schemas ---
 
-from openai.types.responses import (
-    ResponseStatus,
-    ResponseInputItemParam,
-    ResponseOutputItem,
-)
+from openai.types.responses import ResponseInputItemParam, ResponseOutputItem, ResponseStatus
+from openai.types.responses.response import IncompleteDetails, Tool, ToolChoice
 from openai.types.shared import Reasoning
-from openai.types.responses.response import Tool, ToolChoice
-from openai.types.responses.response import IncompleteDetails
 
 ResponseInputOutputItem: TypeAlias = ResponseInputItemParam | ResponseOutputItem
 
@@ -723,7 +714,7 @@ class ResponseUsage(OpenAIBaseModel):
     output_tokens: int
     output_tokens_details: OutputTokensDetails
     total_tokens: int
-    
+
 
 class ResponsesResponse(OpenAIBaseModel):
     """Represents a complete response from the Responses API."""

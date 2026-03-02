@@ -19,6 +19,7 @@ A high-performance OpenAI-compatible API server for MLX models. Run text, vision
 - [Quick Start](#quick-start)
 - [Server Parameters](#server-parameters)
 - [Launching Multiple Models](#launching-multiple-models)
+- [Lazy Model Loading](#lazy-model-loading)
 - [Supported Model Types](#supported-model-types)
 - [Using the API](#using-the-api)
 - [Common Use Cases](#common-use-cases)
@@ -268,6 +269,48 @@ print(r2.choices[0].message.content)
 
 - **GET `/v1/models`** returns all loaded models (their IDs).
 - If you send a `model` that is not in the config, the server returns **404** with an error listing available models.
+
+## Lazy Model Loading
+
+Models can be configured to load on-demand instead of at startup, reducing memory footprint for servers with many models.
+
+### Configuration Options
+
+Add these fields to your `config.yaml`:
+
+```yaml
+server:
+  default_lazy_load: true          # Global default: enable lazy loading
+  default_idle_timeout_seconds: 1800  # Global default: auto-unload after 30 min
+
+models:
+  - model_path: path/to/model
+    model_id: my-model
+    lazy_load: true              # Enable lazy loading (default: false)
+    idle_timeout_seconds: 1800     # Auto-unload after N seconds (0 = never)
+    preload: false                # Load at startup despite lazy_load (default: false)
+```
+
+**Field descriptions:**
+
+| Field | Default | Description |
+|-------|----------|-------------|
+| `lazy_load` | `false` | Load model on first request instead of startup |
+| `idle_timeout_seconds` | `0` | Unload after N seconds of inactivity. `0` = never unload |
+| `preload` | `false` | Load at startup even with `lazy_load: true` (for critical models) |
+| `default_lazy_load` | `false` | Server-level default for `lazy_load` |
+| `default_idle_timeout_seconds` | `1800` | Server-level default for `idle_timeout_seconds` |
+
+### Behavior
+
+- **Lazy models**: Spawn on first request, auto-unload after idle period
+- **Preload models**: Load at startup, no auto-unload (existing behavior)
+- **Mixed config**: Supports both approaches in same config file
+- **Status check**: `GET /v1/models` returns `"status": "ready"` or `"status": "unloaded"`
+
+### Example Config
+
+See `examples/config.yaml` for a complete example with lazy loading configured.
 
 ---
 

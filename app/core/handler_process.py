@@ -32,6 +32,7 @@ the ``resource_tracker`` semaphore leak warning on macOS).
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncGenerator
 import concurrent.futures
 import multiprocessing as mp
 import os
@@ -40,8 +41,8 @@ import tempfile
 import threading
 import time
 import traceback
+from typing import Any
 import uuid
-from typing import Any, AsyncGenerator
 
 from loguru import logger
 
@@ -104,8 +105,8 @@ def _handler_worker(
     import asyncio
     import gc
 
-    import mlx.core as mx
     from loguru import logger
+    import mlx.core as mx
 
     from app.config import ModelEntryConfig
     from app.server import create_handler_from_config
@@ -337,6 +338,11 @@ class HandlerProcessProxy:
         self._rpc_timeout: float = 600.0
         self._stream_queue_size: int = 64
 
+    @property
+    def status(self) -> str:
+        """Return status - always ready for eager handlers."""
+        return "ready"
+
     # ------------------------------------------------------------------
     # Lifecycle
     # ------------------------------------------------------------------
@@ -396,7 +402,7 @@ class HandlerProcessProxy:
 
         try:
             response = await asyncio.wait_for(ready_queue.get(), timeout=300)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             raise RuntimeError(
                 f"Handler process for '{self.model_id}' "
                 "did not become ready within 300 s"
@@ -958,7 +964,7 @@ class HandlerProcessProxy:
                         shutdown_queue.get(), timeout=10
                     )
                     graceful = True
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     logger.warning(
                         f"Handler process for '{self.model_id}' did not "
                         "acknowledge shutdown within 10 s; terminating"

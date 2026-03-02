@@ -186,6 +186,11 @@ class ModelEntryConfig:
     draft_model_path: str | None = None
     num_draft_tokens: int = 2
 
+    # Lazy loading options
+    lazy_load: bool | None = None
+    idle_timeout_seconds: int | None = None
+    preload: bool = False
+
     def __post_init__(self) -> None:
         """Resolve ``model_id`` and validate ``model_type``."""
         if self.model_id is None:
@@ -240,6 +245,23 @@ class MultiModelServerConfig:
     log_level: str = "INFO"
     log_file: str | None = None
     no_log_file: bool = False
+
+    # Lazy loading server-level defaults
+    default_lazy_load: bool = False
+    default_idle_timeout_seconds: int = 1800
+
+    def __post_init__(self) -> None:
+        """Apply server-level defaults to model entries.
+
+        For model entries that use the default values for
+        lazy_load (None) or idle_timeout_seconds (None),
+        replace them with the server-level defaults.
+        """
+        for model in self.models:
+            if model.lazy_load is None:  # Uses default, apply server default
+                model.lazy_load = self.default_lazy_load
+            if model.idle_timeout_seconds is None:  # Uses default, apply server default
+                model.idle_timeout_seconds = self.default_idle_timeout_seconds
 
 
 def load_config_from_yaml(config_path: str) -> MultiModelServerConfig:
@@ -319,4 +341,6 @@ def load_config_from_yaml(config_path: str) -> MultiModelServerConfig:
         log_level=server_raw.get("log_level", "INFO"),
         log_file=server_raw.get("log_file"),
         no_log_file=server_raw.get("no_log_file", False),
+        default_lazy_load=server_raw.get("default_lazy_load", False),
+        default_idle_timeout_seconds=server_raw.get("default_idle_timeout_seconds", 1800),
     )

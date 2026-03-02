@@ -32,6 +32,7 @@ from loguru import logger
 from .api.endpoints import router
 from .config import MLXServerConfig, ModelEntryConfig, MultiModelServerConfig
 from .core.handler_process import HandlerProcessProxy
+from .core.lazy_handler import LazyHandlerProxy
 from .core.model_registry import ModelRegistry
 from .handler import MLXFluxHandler
 from .handler.mlx_embeddings import MLXEmbeddingsHandler
@@ -384,23 +385,10 @@ def create_multi_lifespan(config: MultiModelServerConfig):
 
         try:
             for model_cfg in config.models:
-                model_id = model_cfg.model_id  # guaranteed non-None after __post_init__
+                model_id = model_cfg.model_id
                 logger.info(
-                    f"Spawning handler process for model '{model_id}' "
-                    f"(type={model_cfg.model_type}, path={model_cfg.model_path})"
-                )
-
-                # Serialize the dataclass config to a plain dict for
-                # pickling across the spawn boundary.
-                from dataclasses import asdict
-
-                model_cfg_dict = asdict(model_cfg)
-
-                proxy = HandlerProcessProxy(
-                    model_cfg_dict=model_cfg_dict,
-                    model_type=model_cfg.model_type,
-                    model_path=model_cfg.model_path,
-                    model_id=model_id,
+                    f'Processing model "{model_id}" '
+                    f"(type={model_cfg.model_type}, lazy={model_cfg.lazy_load}, preload={model_cfg.preload})"
                 )
 
                 queue_config = {
@@ -409,8 +397,33 @@ def create_multi_lifespan(config: MultiModelServerConfig):
                     "queue_size": model_cfg.queue_size,
                 }
 
-                # Spawn the child process and wait for it to load the model.
-                await proxy.start(queue_config)
+                if model_cfg.preload or not model_cfg.lazy_load:
+                    from dataclasses import asdict
+
+                    model_cfg_dict = asdict(model_cfg)
+                    logger.info(f'Spawning handler (eager) for model "{model_id}"')
+                    proxy = HandlerProcessProxy(
+                        model_cfg_dict=model_cfg_dict,
+                        model_type=model_cfg.model_type,
+                        model_path=model_cfg.model_path,
+                        model_id=model_id,
+                    )
+                    await proxy.start(queue_config)
+                else:
+                    from dataclasses import asdict
+
+                    model_cfg_dict = asdict(model_cfg)
+                    logger.info(
+                        f'Creating lazy proxy for model "{model_id}" (will spawn on first request)'
+                    )
+                    proxy = LazyHandlerProxy(
+                        model_cfg_dict=model_cfg_dict,
+                        model_type=model_cfg.model_type,
+                        model_path=model_cfg.model_path,
+                        model_id=model_id,
+                        idle_timeout_seconds=model_cfg.idle_timeout_seconds,
+                    )
+                    await proxy.initialize(queue_config)
 
                 await registry.register_model(
                     model_id=model_id,
@@ -418,9 +431,7 @@ def create_multi_lifespan(config: MultiModelServerConfig):
                     model_type=model_cfg.model_type,
                     context_length=model_cfg.context_length,
                 )
-                logger.info(
-                    f"Model '{model_id}' spawned and registered successfully"
-                )
+                logger.info(f'Model "{model_id}" registered successfully')
 
             # Store registry on app state for endpoint access
             app.state.registry = registry
