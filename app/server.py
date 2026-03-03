@@ -39,6 +39,7 @@ from .handler.mlx_embeddings import MLXEmbeddingsHandler
 from .handler.mlx_lm import MLXLMHandler
 from .handler.mlx_vlm import MLXVLMHandler
 from .handler.mlx_speech import MLXSpeechHandler
+from .handler.mlx_tts import MLXTTSHandler
 from .version import __version__
 
 
@@ -197,6 +198,10 @@ def create_lifespan(config_args: MLXServerConfig):
                 handler = MLXSpeechHandler(
                     model_path=model_identifier, max_concurrency=config_args.max_concurrency
                 )
+            elif config_args.model_type == "tts":
+                handler = MLXTTSHandler(
+                    model_path=model_identifier, max_concurrency=config_args.max_concurrency
+                )
             else:
                 handler = MLXLMHandler(
                     model_path=model_identifier,
@@ -320,6 +325,12 @@ def create_handler_from_config(model_cfg: ModelEntryConfig) -> Any:
 
     if model_cfg.model_type == "speech":
         return MLXSpeechHandler(
+            model_path=model_path,
+            max_concurrency=model_cfg.max_concurrency,
+        )
+
+    if model_cfg.model_type == "tts":
+        return MLXTTSHandler(
             model_path=model_path,
             max_concurrency=model_cfg.max_concurrency,
         )

@@ -571,6 +571,17 @@ class ImageEditResponse(OpenAIBaseModel):
     data: list[ImageData] = Field(..., description="List of edited images")
 
 
+class SpeechRequest(OpenAIBaseModel):
+    """Request schema for OpenAI-compatible text-to-speech API."""
+    model: str = Field(..., description="The TTS model to use.")
+    input: str = Field(..., description="The text to generate audio for.")
+    voice: str = Field(default="alloy", description="The voice to use when generating the audio.")
+    response_format: Literal["mp3", "opus", "aac", "flac", "wav", "pcm"] = Field(
+        default="wav", description="The format to return the audio in."
+    )
+    speed: float = Field(default=1.0, ge=0.25, le=4.0, description="The speed of the generated audio.")
+
+
 class TranscriptionRequest(OpenAIBaseModel):
     """Request schema for OpenAI-compatible transcription API."""
 

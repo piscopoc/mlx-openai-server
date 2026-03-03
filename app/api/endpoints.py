@@ -12,7 +12,7 @@ import time
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Form, HTTPException, Request
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse, Response
 from loguru import logger
 import numpy as np
 from openai.types.responses import FunctionTool
@@ -44,6 +44,7 @@ from ..schemas.openai import (
     ImageEditResponse,
     ImageGenerationRequest,
     ImageGenerationResponse,
+    SpeechRequest,
     ImageURL,
     InputTokensDetails,
     Message,
@@ -489,6 +490,46 @@ async def create_image_edit(
         )
     else:
         return image_response
+
+
+@router.post("/v1/audio/speech", response_class=Response, response_model=None)
+async def create_speech(
+    request: SpeechRequest, raw_request: Request
+) -> Response | JSONResponse:
+    """Handle text-to-speech requests."""
+    try:
+        handler = _resolve_handler(raw_request, model_id=request.model)
+        if handler is None:
+            return JSONResponse(
+                content=create_error_response(
+                    "Model handler not initialized",
+                    "service_unavailable",
+                    HTTPStatus.SERVICE_UNAVAILABLE,
+                ),
+                status_code=HTTPStatus.SERVICE_UNAVAILABLE,
+            )
+
+        if _get_handler_type(handler) != "tts":
+            return JSONResponse(
+                content=create_error_response(
+                    "Speech generation requires a TTS model. "
+                    f"Handler for '{request.model}' is {type(handler).__name__}.",
+                    "unsupported_request",
+                    HTTPStatus.BAD_REQUEST,
+                ),
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
+
+        result = await handler.generate_speech_response(request)
+        return Response(content=result["content"], media_type=result["media_type"])
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception(f"Error processing speech request: {type(e).__name__}: {e}")
+        return JSONResponse(
+            content=create_error_response(str(e)), status_code=HTTPStatus.INTERNAL_SERVER_ERROR
+        )
 
 
 @router.post("/v1/audio/transcriptions", response_model=None)

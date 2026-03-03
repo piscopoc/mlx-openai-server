@@ -290,6 +290,7 @@ class HandlerProcessProxy:
         "image-generation": "image",
         "image-edit": "image",
         "speech": "speech",
+        "tts": "tts",
     }
 
     def __init__(
@@ -919,6 +920,23 @@ class HandlerProcessProxy:
             "transcribe_stream_from_data", request_data, *args, **kwargs
         ):
             yield chunk
+
+    # -- TTS handler methods --
+
+    async def generate_speech_response(self, request: Any) -> Any:
+        """Forward a TTS generation request to the subprocess.
+
+        Parameters
+        ----------
+        request : SpeechRequest
+            The text-to-speech request.
+
+        Returns
+        -------
+        Response
+            The generated audio response.
+        """
+        return await self._call("generate_speech_response", request)
 
     # -- Cleanup --
 

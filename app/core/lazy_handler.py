@@ -220,3 +220,9 @@ class LazyHandlerProxy:
         ):
             self._reset_idle_timer()
             yield chunk
+
+    async def generate_speech_response(self, request: Any) -> Any:
+        handler = await self._ensure_handler()
+        self._reset_idle_timer()
+        self._start_idle_timer_if_needed()
+        return await handler.generate_speech_response(request)
