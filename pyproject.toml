@@ -32,8 +32,8 @@ dependencies = [
   "mflux>=0.15.0,<0.17",
   "loguru>=0.7.3,<0.8",
   "mlx-embeddings>=0.0.5,<0.1",
-  "mlx-lm>=0.30.5,<0.31",
-  "mlx-vlm>=0.3.11,<0.4",
+  "mlx-lm>=0.30.7,<0.31",
+  "mlx-vlm>=0.3.12,<0.4",
   "mlx-audio>=0.3.1",
   "mlx>=0.30.6",                        # Needed due to a typing issue in <0.30
   "numpy>=2.2.0,<2.4",
@@ -90,6 +90,10 @@ build-backend = "setuptools.build_meta"
 
 [tool.uv]
 prerelease = "allow"
+override-dependencies = [
+  "mlx-lm>=0.30.7",
+  "transformers>=5.0.0",
+]
 
 [tool.codespell]
 skip = "*.py,*.toml,*.ipynb"

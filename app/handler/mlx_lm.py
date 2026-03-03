@@ -477,6 +477,8 @@ class MLXLMHandler:
                         parsed_content = tool_parser.extract_tool_calls(response_text)
                         parsed_response["tool_calls"] = parsed_content.get("tool_calls")
                         parsed_response["content"] = parsed_content.get("content")
+                    else:
+                        parsed_response["content"] = response_text
             else:
                 parsed_response["content"] = response_text
 
