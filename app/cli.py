@@ -58,8 +58,7 @@ class UpperChoice(click.Choice):
         )
 
 
-# Configure basic logging for CLI (will be overridden by main.py)
-logger.remove()  # Remove default handler
+# Configure basic logging for CLI
 logger.add(
     sys.stderr,
     format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "

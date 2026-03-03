@@ -1,23 +1,19 @@
 import librosa
 import numpy as np
-from functools import lru_cache
 from mlx_audio.stt.utils import load
 
 SAMPLING_RATE = 16000
 CHUNK_SIZE = 30
 
 
-@lru_cache(maxsize=32)
 def load_audio(fname):
-    """Load and cache audio file. Cache size limited to 32 recent files."""
+    """Load audio file."""
     a, _ = librosa.load(fname, sr=SAMPLING_RATE, dtype=np.float32)
     return a
 
-@lru_cache(maxsize=32)
 def calculate_audio_duration(audio_path: str) -> int:
     """Calculate the duration of the audio file in seconds."""
-    audio = load_audio(audio_path)
-    return len(audio) / SAMPLING_RATE
+    return int(librosa.get_duration(path=audio_path))
 
 class MLXSpeech:
     def __init__(self, model_path: str):

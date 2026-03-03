@@ -93,7 +93,7 @@ class MLXSpeechHandler:
         temp_file_path = None
         
         try:
-            request_data = await self._prepare_transcription_request(request)
+            request_data = await self.prepare_transcription_request(request)
             temp_file_path = request_data.get("audio_path")
 
             # Submit to the inference thread
@@ -127,7 +127,7 @@ class MLXSpeechHandler:
     async def generate_transcription_stream_from_data(
         self, 
         request_data: Dict[str, Any],
-        response_format: TranscriptionResponseFormat
+        response_format: TranscriptionResponseFormat = TranscriptionResponseFormat.JSON
     ) -> AsyncGenerator[str, None]:
         """
         Generate a transcription stream from prepared request data.
@@ -235,7 +235,7 @@ class MLXSpeechHandler:
             logger.error(f"Error saving uploaded file: {str(e)}")
             raise
 
-    async def _prepare_transcription_request(
+    async def prepare_transcription_request(
         self, 
         request: TranscriptionRequest    
         ) -> Dict[str, Any]:
@@ -244,7 +244,6 @@ class MLXSpeechHandler:
         
         Args:
             request: TranscriptionRequest object.
-            audio_path: Path to the audio file.
         
         Returns:
             Dict containing the request data ready for the model.
