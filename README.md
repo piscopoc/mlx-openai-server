@@ -79,7 +79,7 @@ pip install mlx-openai-server
 pip install git+https://github.com/cubist38/mlx-openai-server.git
 ```
 
-### Optional: Whisper Support
+### Optional: Speech Support
 For audio transcription models, install ffmpeg:
 ```bash
 brew install ffmpeg
@@ -123,10 +123,10 @@ mlx-openai-server launch \
   --model-type embeddings \
   --model-path <embeddings-model-path>
 
-# Whisper (audio transcription)
+# Speech (audio transcription)
 mlx-openai-server launch \
-  --model-type whisper \
-  --model-path mlx-community/whisper-large-v3-mlx
+  --model-type speech \
+  --model-path mlx-community/speech-large-v3-mlx
 ```
 
 ### Server Parameters
@@ -135,7 +135,7 @@ mlx-openai-server launch \
 |-----------|----------|------|---------|-------------|
 | | | | | **Required parameters** |
 | `--model-path` | Yes | path | — | Path to MLX model (local or HuggingFace repo) |
-| `--model-type` | Yes | string | — | `lm`, `multimodal`, `image-generation`, `image-edit`, `embeddings`, or `whisper` |
+| `--model-type` | Yes | string | — | `lm`, `multimodal`, `image-generation`, `image-edit`, `embeddings`, or `speech` |
 | | | | | **Model configuration** |
 | `--config-name` | No* | string | — | Image models: `flux-schnell`, `flux-dev`, `flux-krea-dev`, `flux-kontext-dev`, `flux2-klein-4b`, `flux2-klein-9b`, `qwen-image`, `qwen-image-edit`, `z-image-turbo`, `fibo` |
 | `--quantize` | No | int | — | Quantization level: 4, 8, or 16 (image models) |
@@ -177,7 +177,7 @@ Create a YAML file with a `server` section (host, port, logging) and a `models` 
 | Key | Required | Description |
 |-----|----------|-------------|
 | `model_path` | Yes | Path or HuggingFace repo of the model |
-| `model_type` | No | `lm`, `multimodal`, `image-generation`, `image-edit`, `embeddings`, `whisper` (default: `lm`) |
+| `model_type` | No | `lm`, `multimodal`, `image-generation`, `image-edit`, `embeddings`, `speech` (default: `lm`) |
 | `model_id` | No | ID used in API requests; defaults to `model_path` if omitted |
 | `context_length` | No | Max context length (lm / multimodal) |
 | `max_concurrency`, `queue_timeout`, `queue_size` | No | Per-model queue settings |
@@ -321,7 +321,7 @@ See `examples/config.yaml` for a complete example with lazy loading configured.
 3. **Image generation** (`image-generation`) - Flux-series, Qwen Image, Z-Image Turbo, Fibo
 4. **Image editing** (`image-edit`) - Flux kontext, Qwen Image Edit
 5. **Embeddings** (`embeddings`) - Text embeddings via `mlx-embeddings`
-6. **Whisper** (`whisper`) - Audio transcription (requires ffmpeg)
+6. **Speech** (`speech`) - Audio transcription (requires ffmpeg)
 
 ### Image Model Configurations
 
@@ -349,7 +349,7 @@ See `examples/config.yaml` for a complete example with lazy loading configured.
 | **Vision Q&A** | `mlx-openai-server launch --model-type multimodal --model-path <path>` |
 | **Image generation** | `mlx-openai-server launch --model-type image-generation --model-path <path> --config-name flux-dev` |
 | **Image editing** | `mlx-openai-server launch --model-type image-edit --model-path <path> --config-name flux-kontext-dev` |
-| **Audio transcription** | `mlx-openai-server launch --model-type whisper --model-path mlx-community/whisper-large-v3-mlx` |
+| **Audio transcription** | `mlx-openai-server launch --model-type speech --model-path mlx-community/speech-large-v3-mlx` |
 | **Embeddings** | `mlx-openai-server launch --model-type embeddings --model-path <path>` |
 
 ---
@@ -762,8 +762,8 @@ mlx-openai-server launch --model-type image-edit --model-path <path> --config-na
 # Embeddings
 mlx-openai-server launch --model-type embeddings --model-path <path>
 
-# Whisper (audio transcription)
-mlx-openai-server launch --model-type whisper --model-path mlx-community/whisper-large-v3-mlx
+# Speech (audio transcription)
+mlx-openai-server launch --model-type speech --model-path mlx-community/speech-large-v3-mlx
 ```
 
 ---
@@ -798,7 +798,7 @@ Built on top of:
 - [mlx-vlm](https://github.com/Blaizzy/mlx-vlm) - Multimodal models
 - [mlx-embeddings](https://github.com/Blaizzy/mlx-embeddings) - Embeddings
 - [mflux](https://github.com/filipstrand/mflux) - Flux image models
-- [mlx-whisper](https://github.com/ml-explore/mlx-examples/tree/main/whisper) - Audio transcription
+- [mlx-audio](https://github.com/Blaizzy/mlx-audio) - Speech and audio processing
 - [mlx-community](https://huggingface.co/mlx-community) - Model repository
 
 ---

@@ -58,8 +58,7 @@ class UpperChoice(click.Choice):
         )
 
 
-# Configure basic logging for CLI (will be overridden by main.py)
-logger.remove()  # Remove default handler
+# Configure basic logging for CLI
 logger.add(
     sys.stderr,
     format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
@@ -102,15 +101,15 @@ def cli():
     "--model-path",
     required=False,
     default=None,
-    help="Path to the model (required for lm, multimodal, embeddings, image-generation, image-edit, whisper model types). With `image-generation` or `image-edit` model types, it should be the local path to the model.",
+    help="Path to the model (required for lm, multimodal, embeddings, image-generation, image-edit, speech model types). With `image-generation` or `image-edit` model types, it should be the local path to the model.",
 )
 @click.option(
     "--model-type",
     default="lm",
     type=click.Choice(
-        ["lm", "multimodal", "image-generation", "image-edit", "embeddings", "whisper"]
+        ["lm", "multimodal", "image-generation", "image-edit", "embeddings", "speech"]
     ),
-    help="Type of model to run (lm: text-only, multimodal: text+vision+audio, image-generation: flux image generation, image-edit: flux image edit, embeddings: text embeddings, whisper: audio transcription)",
+    help="Type of model to run (lm: text-only, multimodal: text+vision+audio, image-generation: flux image generation, image-edit: flux image edit, embeddings: text embeddings, speech: audio transcription)",
 )
 @click.option(
     "--context-length",

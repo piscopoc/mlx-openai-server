@@ -79,7 +79,7 @@ def _get_handler_type(handler: Any) -> str:
     -------
     str
         Handler type string (``"lm"``, ``"multimodal"``, ``"embeddings"``,
-        ``"image"``, ``"whisper"``), or ``""`` if not determinable.
+        ``"image"``, ``"speech"``), or ``""`` if not determinable.
     """
     return getattr(handler, "handler_type", "")
 
@@ -242,7 +242,7 @@ async def queue_stats(raw_request: Request) -> dict[str, Any] | JSONResponse:
     """
     Get queue statistics.
 
-    Note: queue_stats shape is handler-dependent (Flux vs LM/VLM/Whisper)
+    Note: queue_stats shape is handler-dependent (Flux vs LM/VLM/Speech)
     so callers know keys may vary.
     """
     handler = getattr(raw_request.app.state, "handler", None)

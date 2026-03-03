@@ -141,7 +141,7 @@ class MLXServerConfig:
 # ---------------------------------------------------------------------------
 
 VALID_MODEL_TYPES = frozenset(
-    {"lm", "multimodal", "image-generation", "image-edit", "embeddings", "whisper"}
+    {"lm", "multimodal", "image-generation", "image-edit", "embeddings", "speech"}
 )
 
 

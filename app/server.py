@@ -38,7 +38,7 @@ from .handler import MLXFluxHandler
 from .handler.mlx_embeddings import MLXEmbeddingsHandler
 from .handler.mlx_lm import MLXLMHandler
 from .handler.mlx_vlm import MLXVLMHandler
-from .handler.mlx_whisper import MLXWhisperHandler
+from .handler.mlx_speech import MLXSpeechHandler
 from .version import __version__
 
 
@@ -118,7 +118,7 @@ def create_lifespan(config_args: MLXServerConfig):
 
     - Determine the model identifier from the provided ``config_args``
     - Instantiate the appropriate MLX handler based on ``model_type``
-      (multimodal, image-generation, image-edit, embeddings, whisper, or
+      (multimodal, image-generation, image-edit, embeddings, speech, or
       text LM)
     - Initialize the handler (including queuing and concurrency setup)
     - Perform an initial memory cleanup
@@ -193,8 +193,8 @@ def create_lifespan(config_args: MLXServerConfig):
                     lora_paths=config_args.lora_paths,
                     lora_scales=config_args.lora_scales,
                 )
-            elif config_args.model_type == "whisper":
-                handler = MLXWhisperHandler(
+            elif config_args.model_type == "speech":
+                handler = MLXSpeechHandler(
                     model_path=model_identifier, max_concurrency=config_args.max_concurrency
                 )
             else:
@@ -318,8 +318,8 @@ def create_handler_from_config(model_cfg: ModelEntryConfig) -> Any:
             max_concurrency=model_cfg.max_concurrency,
         )
 
-    if model_cfg.model_type == "whisper":
-        return MLXWhisperHandler(
+    if model_cfg.model_type == "speech":
+        return MLXSpeechHandler(
             model_path=model_path,
             max_concurrency=model_cfg.max_concurrency,
         )

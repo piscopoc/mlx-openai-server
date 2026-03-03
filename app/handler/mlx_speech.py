@@ -11,7 +11,7 @@ from fastapi import HTTPException
 from loguru import logger
 
 from ..core import InferenceWorker
-from ..models.mlx_whisper import MLX_Whisper, calculate_audio_duration
+from ..models.mlx_speech import MLXSpeech, calculate_audio_duration
 from ..schemas.openai import (
     Delta,
     TranscriptionRequest,
@@ -23,13 +23,13 @@ from ..schemas.openai import (
 )
 from ..utils.errors import create_error_response
 
-class MLXWhisperHandler:
+class MLXSpeechHandler:
     """
-    Handler class for making requests to the underlying MLX Whisper model service.
+    Handler class for making requests to the underlying MLX Speech model service.
     Provides request queuing, metrics tracking, and robust error handling for audio transcription.
     """
 
-    handler_type: str = "whisper"
+    handler_type: str = "speech"
 
     def __init__(self, model_path: str, max_concurrency: int = 1):
         """
@@ -40,14 +40,14 @@ class MLXWhisperHandler:
             max_concurrency (int): Maximum number of concurrent model inference tasks.
         """
         self.model_path = model_path
-        self.model = MLX_Whisper(model_path)
+        self.model = MLXSpeech(model_path)
         self.model_created = int(time.time())  # Store creation time when model is loaded
 
         # Dedicated inference thread — keeps the event loop free during
         # blocking MLX model computation.
         self.inference_worker = InferenceWorker()
 
-        logger.info(f"Initialized MLXWhisperHandler with model path: {model_path}")
+        logger.info(f"Initialized MLXSpeechHandler with model path: {model_path}")
     
     async def get_models(self) -> List[Dict[str, Any]]:
         """
@@ -83,7 +83,7 @@ class MLXWhisperHandler:
             timeout=queue_config.get("timeout", 600),
         )
         self.inference_worker.start()
-        logger.info("Initialized MLXWhisperHandler and started inference worker")
+        logger.info("Initialized MLXSpeechHandler and started inference worker")
 
     async def generate_transcription_response(self, request: TranscriptionRequest) -> TranscriptionResponse:
         """
@@ -93,7 +93,7 @@ class MLXWhisperHandler:
         temp_file_path = None
         
         try:
-            request_data = await self._prepare_transcription_request(request)
+            request_data = await self.prepare_transcription_request(request)
             temp_file_path = request_data.get("audio_path")
 
             # Submit to the inference thread
@@ -127,7 +127,7 @@ class MLXWhisperHandler:
     async def generate_transcription_stream_from_data(
         self, 
         request_data: Dict[str, Any],
-        response_format: TranscriptionResponseFormat
+        response_format: TranscriptionResponseFormat = TranscriptionResponseFormat.JSON
     ) -> AsyncGenerator[str, None]:
         """
         Generate a transcription stream from prepared request data.
@@ -235,7 +235,7 @@ class MLXWhisperHandler:
             logger.error(f"Error saving uploaded file: {str(e)}")
             raise
 
-    async def _prepare_transcription_request(
+    async def prepare_transcription_request(
         self, 
         request: TranscriptionRequest    
         ) -> Dict[str, Any]:
@@ -244,7 +244,6 @@ class MLXWhisperHandler:
         
         Args:
             request: TranscriptionRequest object.
-            audio_path: Path to the audio file.
         
         Returns:
             Dict containing the request data ready for the model.
@@ -431,13 +430,13 @@ class MLXWhisperHandler:
         and resources are released.
         """
         try:
-            logger.info("Cleaning up MLXWhisperHandler resources")
+            logger.info("Cleaning up MLXSpeechHandler resources")
             if hasattr(self, 'inference_worker'):
                 self.inference_worker.stop()
             # Force garbage collection
             gc.collect()
-            logger.info("MLXWhisperHandler cleanup completed successfully")
+            logger.info("MLXSpeechHandler cleanup completed successfully")
         except Exception as e:
-            logger.error(f"Error during MLXWhisperHandler cleanup: {str(e)}")
+            logger.error(f"Error during MLXSpeechHandler cleanup: {str(e)}")
             raise
 

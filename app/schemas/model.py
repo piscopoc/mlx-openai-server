@@ -21,7 +21,7 @@ class ModelMetadata(BaseModel):
     id: str = Field(..., description="Unique model identifier")
     type: str = Field(
         ...,
-        description="Model type (lm, multimodal, embeddings, whisper, image-generation, image-edit)",
+        description="Model type (lm, multimodal, embeddings, speech, image-generation, image-edit)",
     )
     context_length: int | None = Field(
         None, description="Maximum context length for language models"

@@ -277,7 +277,7 @@ class HandlerProcessProxy:
         Unique model identifier in the registry.
     handler_type : str
         Handler type string (``"lm"``, ``"multimodal"``, ``"embeddings"``,
-        ``"image"``, ``"whisper"``).
+        ``"image"``, ``"speech"``).
     model_created : int
         Unix timestamp when the handler process was started.
     """
@@ -289,7 +289,7 @@ class HandlerProcessProxy:
         "embeddings": "embeddings",
         "image-generation": "image",
         "image-edit": "image",
-        "whisper": "whisper",
+        "speech": "speech",
     }
 
     def __init__(
@@ -836,7 +836,7 @@ class HandlerProcessProxy:
                 except OSError:
                     pass
 
-    # -- Whisper handler methods --
+    # -- Speech handler methods --
 
     async def prepare_transcription_request(
         self, request: Any
