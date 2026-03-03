@@ -16,7 +16,7 @@ This document tracks session-to-session handoffs for the `mlx-openai-server-lab`
 - Stateless design: no database, no persistent storage, all config via CLI
 - Single-model-per-instance: model loaded at startup, no runtime switching
 - Async request queue with semaphore-based concurrency control
-- Supports 6 model types: lm, multimodal, embeddings, whisper, image-generation, image-edit
+- Supports 6 model types: lm, multimodal, embeddings, speech, image-generation, image-edit
 
 **Key Components Identified:**
 1. **Entrypoints**: CLI via Click (`app/cli.py:145`) or argparse (`app/main.py:50`), script entry in `pyproject.toml:56`

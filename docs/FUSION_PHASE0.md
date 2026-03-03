@@ -13,7 +13,7 @@ This repository implements a **stateless, OpenAI-compatible HTTP server** that e
 **Key Architecture:**
 - FastAPI-based HTTP server with uvicorn
 - Asynchronous request queue with semaphore-based concurrency control
-- Model handlers wrapping MLX libraries (mlx-lm, mlx-vlm, mlx-whisper, mlx-embeddings, mflux)
+- Model handlers wrapping MLX libraries (mlx-lm, mlx-vlm, mlx-audio, mlx-embeddings, mflux)
 - Streaming and non-streaming inference support
 - Zero persistent state (all stateless)
 
@@ -45,17 +45,17 @@ This repository implements a **stateless, OpenAI-compatible HTTP server** that e
 | `app/models/mlx_lm.py:136` | `MLX_LM.__call__()` | Inference entry point (streaming/non-streaming) |
 | `app/models/mlx_vlm.py` | `MLX_VLM` | Multimodal model wrapper (mlx-vlm) |
 | `app/models/mlx_embeddings.py` | `MLXEmbeddings` | Embeddings model wrapper |
-| `app/models/mlx_whisper.py` | `MLXWhisper` | Audio transcription model wrapper |
+| `app/models/mlx_speech.py` | `MLXSpeech` | Audio transcription model wrapper |
 | `app/models/mflux.py` | `MFlux` | Flux image generation model wrapper |
 | `app/handler/mlx_lm.py:16` | `MLXLMHandler` | Handler that wraps MLX_LM with queue |
 | `app/handler/mlx_vlm.py` | `MLXVLMHandler` | Handler for multimodal models |
 | `app/handler/mlx_embeddings.py` | `MLXEmbeddingsHandler` | Handler for embeddings |
-| `app/handler/mlx_whisper.py` | `MLXWhisperHandler` | Handler for Whisper |
+| `app/handler/mlx_speech.py` | `MLXSpeechHandler` | Handler for Speech |
 | `app/handler/mflux.py` | `MLXFluxHandler` | Handler for Flux image generation |
 | `app/main.py:88-149` | Lifespan handler selection | Model type → Handler instantiation |
 
 **Model Selection Logic:**
-- Model type specified via `--model-type` CLI arg (choices: lm, multimodal, image-generation, image-edit, embeddings, whisper)
+- Model type specified via `--model-type` CLI arg (choices: lm, multimodal, image-generation, image-edit, embeddings, speech)
 - Appropriate handler instantiated in `create_lifespan()` based on model type
 - Model loaded synchronously at server startup
 - **No runtime model switching** – one model per server instance
@@ -90,7 +90,7 @@ This repository implements a **stateless, OpenAI-compatible HTTP server** that e
 | `app/api/endpoints.py:102` | `POST /v1/embeddings` | Generate embeddings |
 | `app/api/endpoints.py:116` | `POST /v1/images/generations` | Generate images (Flux) |
 | `app/api/endpoints.py:141` | `POST /v1/images/edits` | Edit images (Flux kontext) |
-| `app/api/endpoints.py:166` | `POST /v1/audio/transcriptions` | Transcribe audio (Whisper) |
+| `app/api/endpoints.py:166` | `POST /v1/audio/transcriptions` | Transcribe audio (Speech) |
 | `app/main.py:207` | Router inclusion | `app.include_router(router)` |
 
 **Request Flow:**
@@ -191,7 +191,7 @@ This repository implements a **stateless, OpenAI-compatible HTTP server** that e
 | POST | `/v1/embeddings` | Generate embeddings | `handler.generate_embeddings_response()` | Returns list of embeddings |
 | POST | `/v1/images/generations` | Generate images | `handler.generate_image()` | Flux models only, requires mflux |
 | POST | `/v1/images/edits` | Edit images | `handler.edit_image()` | Flux kontext only, requires mflux |
-| POST | `/v1/audio/transcriptions` | Transcribe audio | `handler.generate_transcription_response()` | Whisper models only |
+| POST | `/v1/audio/transcriptions` | Transcribe audio | `handler.generate_transcription_response()` | Speech models only |
 
 **Compatibility:**
 - Implements OpenAI API format for requests and responses
@@ -295,7 +295,7 @@ This repository implements a **stateless, OpenAI-compatible HTTP server** that e
 - **uvicorn** (0.35.0): ASGI server
 - **mlx-lm** (0.28.3): Text-only language models
 - **mlx-vlm** (0.3.6): Multimodal vision-language models
-- **mlx-whisper** (0.4.3): Audio transcription
+- **mlx-audio** (0.3.1): Speech and audio processing
 - **mlx-embeddings** (0.0.4): Text embeddings
 - **mflux** (optional): Flux image generation
 - **outlines** (1.1.1): Structured output (JSON schema)
